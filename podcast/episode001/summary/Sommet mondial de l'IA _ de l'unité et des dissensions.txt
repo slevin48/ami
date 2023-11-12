@@ -1,0 +1,9 @@
+Le sommet mondial de l'IA qui s'est tenu à Bletchley, en Angleterre, a réuni 28 gouvernements engagés à travailler ensemble sur les risques liés à l'intelligence artificielle. Cependant, bien que l'événement ait été marqué par une rare démonstration d'unité, tous les pays participants n'ont pas les mêmes points de vue. La France, par exemple, met plus l'accent sur l'innovation que sur la régulation.
+
+Lors du sommet, le Royaume-Uni a annoncé la création d'un institut britannique sur la sécurité de l'IA, et espère à terme créer un groupe d'experts sur le modèle du Giec pour le climat. Les nations et entreprises présentes, dont AWS, Google et Meta, travailleront également ensemble pour tester la prochaine génération des modèles d'IA en fonction de différents risques critiques.
+
+Cependant, certains pays concurrents cherchent également à prendre le leadership sur les futures régulations de l'IA. Les géants de la tech et les nouveaux acteurs, tels qu'OpenAI, appellent à réguler davantage cette technologie. Cependant, certains acteurs français présents à l'événement se méfient du discours alarmiste des Anglo-Saxons, estimant qu'il vise principalement à sécuriser leurs monopoles.
+
+La France adopte quant à elle un discours plus mesuré, mettant en avant les opportunités à court terme de l'IA pour augmenter la productivité dans les pays européens. Le ministre de l'Economie et des Finances, Bruno Le Maire, estime qu'il est nécessaire de réguler les applications basées sur l'IA, mais considère que réguler les grands modèles de langages serait une erreur stratégique.
+
+Malgré cela, la France reste engagée dans le développement des talents et des technologies en matière d'IA, tout en cherchant à préserver l'innovation grâce à une régulation efficace. Il semble donc que le célèbre dicton "Les Etats-Unis innove, la Chine copie et l'Europe régule" soit en partie remis en question.
