@@ -1,3 +1,6 @@
+python-dotenv
 pydub
-# openai
-# python-elevenlabs
+openai
+elevenlabs
+# moviepy
+# ipykernel

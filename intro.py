@@ -6,14 +6,12 @@ set_api_key(os.getenv('ELEVENLABS_KEY'))
 voices_list = list(voices())
 # print(voices_list)
 voice = 'Yann'
-episode_number = 2
+episode_number = 3
 episode = 'episode' + '{:03d}'.format(episode_number)
 intro = 'ami_{:03d}.txt'.format(episode_number)
 # Read the text from the file
 with open(f'podcast/{episode}/' + intro, 'r',encoding='utf-8') as f:
     text = f.read()
-
-voice = 'Yann'
 
 # Generate audio for the content
 audio = generate(
