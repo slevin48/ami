@@ -1,6 +1,6 @@
 # Artificial Market Intelligence 🤖
 
-https://github.com/slevin48/ami/assets/12418115/c3778574-9797-49e4-aa2f-a0fb9c6fcd3c
+https://github.com/slevin48/ami/assets/12418115/6d12b2dd-b349-48be-bdf9-4efafae4e0bf
 
 ## Summary
 
