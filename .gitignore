@@ -3,3 +3,5 @@ env/
 archives/
 voice/
 podcast/
+ami=app/
+.streamlit/

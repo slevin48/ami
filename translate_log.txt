@@ -1,0 +1,30 @@
+Iteration 0: Les embauches de cadres marquent le pas mais résistent toujours.txt
+Translation characters: 459
+Translated title: The hiring of executives is slowing down but still holding steady.
+Voice: alloy
+Audio file saved to podcast\episode003\audio_en\The hiring of executives is slowing down but still holding steady..mp3
+Iteration 1: Nikki Haley joue sa carte dans la primaire républicaine.txt
+Translation characters: 629
+Translated title: Nikki Haley is playing her hand in the Republican primary.
+Voice: echo
+Audio file saved to podcast\episode003\audio_en\Nikki Haley is playing her hand in the Republican primary..mp3
+Iteration 2: Nucléaire - les petits réacteurs essuient un revers aux Etats-Unis.txt
+Translation characters: 465
+Translated title: Nuclear - small reactors suffer a setback in the United States
+Voice: fable
+Audio file saved to podcast\episode003\audio_en\Nuclear - small reactors suffer a setback in the United States.mp3
+Iteration 3: Présidentielle américaine 2024 - Donald Trump fait la course en tête.txt
+Translation characters: 509
+Translated title: 2024 American Presidential Election - Donald Trump in the lead
+Voice: onyx
+Audio file saved to podcast\episode003\audio_en\2024 American Presidential Election - Donald Trump in the lead.mp3
+Iteration 4: Trump II - le même en pire.txt
+Translation characters: 525
+Translated title: Trump II - the same but worse
+Voice: nova
+Audio file saved to podcast\episode003\audio_en\Trump II - the same but worse.mp3
+Iteration 5: « Je suis devenu président grâce à ma marque », se vante Trump à son procès.txt
+Translation characters: 488
+Translated title: I became president because of my brand, boasts Trump at his trial.
+Voice: shimmer
+Audio file saved to podcast\episode003\audio_en\I became president because of my brand, boasts Trump at his trial..mp3
