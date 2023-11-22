@@ -1,27 +1,36 @@
 import streamlit as st
-import os
-import openai
-from pathlib import Path
+import openai, boto3, re
+from io import BytesIO
 
 # Load environment variables
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 voices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 
+# AWS S3 Bucket Name
+BUCKET_NAME = "ami48" 
+
+# AWS S3 Client Initialization
+s3_client = boto3.client('s3')
+
 # Initialize session state
 if "create_article" not in st.session_state:
     st.session_state.create_article = False
-if "edit_article" not in st.session_state:
-    st.session_state.edit_article = False
-if "text" not in st.session_state:
-    st.session_state.text = ''
 
-# Functions
-def create_article(title):
-    # Create text file without any content
-    with open(f'podcast/{episode}/text/{title}.txt', 'w', encoding='utf-8'):
-        pass
-    # with st.spinner('Wait for it...') as spinner:
-    #     st.write("Article created.")
+# Functions for S3 Operations
+def create_article_s3(title, bucket_name):
+    file_path = f'{episode}/text/{title}.txt'
+    s3_client.put_object(Bucket=bucket_name, Key=file_path, Body='')
+
+def list_files_s3(bucket_name, directory):
+    response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=directory)
+    return [item['Key'] for item in response.get('Contents', [])]
+
+def read_file_s3(bucket_name, file_path):
+    response = s3_client.get_object(Bucket=bucket_name, Key=file_path)
+    return response['Body'].read().decode('utf-8')
+
+def write_file_s3(bucket_name, file_path, data):
+    s3_client.put_object(Bucket=bucket_name, Key=file_path, Body=data)
 
 def summarize(text):
     inst = '''Resume en moins de 1000 caracteres:''' 
@@ -33,102 +42,86 @@ def summarize(text):
     )
     return completion.choices[0].message.content
 
-def tts(summary, article, episode, voice):
-    speech_file_path = Path(f'podcast/{episode}/audio/' + article.replace('.txt', '.mp3'))
+def tts_s3(summary, article, episode, voice, bucket_name):
+    speech_file_path = f'{episode}/audio/' + article.replace('.txt', '.mp3')
     response = openai.audio.speech.create(
-    model="tts-1",
-    voice=voice,
-    input=summary
+        model="tts-1",
+        voice=voice,
+        input=summary
     )
-    response.stream_to_file(speech_file_path)
-    # return response.content
+    audio_data = BytesIO(response.content)
+    s3_client.upload_fileobj(audio_data, bucket_name, speech_file_path)
 
 # Streamlit app
-st.title("Podcast Generator")
+st.title("AMI 🤖 Artificial Market Intelligence")
 
 # User input for episode number
 episode_number = st.number_input("Enter Episode Number", min_value=1, value=2, step=1)
 episode = 'episode' + '{:03d}'.format(episode_number)
 
-# Display articles
-directory = 'podcast/' + episode 
-if os.path.exists(directory):
-    if st.button("Create Article"):
+# Create article
+if st.button("Create Article"):
         st.session_state.create_article = True
-    if st.session_state.create_article:
-        if title := st.text_input("Enter Article title", key='title'):
-            # st.write("Article title: ", title)
-            create_article(title)
-            st.session_state.create_article = False
-    articles = os.listdir(directory + '/text')
-    if ("title" in locals() or "title" in globals()) and title != '':
-        article_index = articles.index(title + '.txt')
-    else:
-        article_index = 0
-    article = st.selectbox("Select an Article", articles, index=article_index)
+if st.session_state.create_article:
+    if title := st.text_input("Enter Article title", key='title'):
+        title = title.replace(':', '-')
+        title = re.sub(r'[<>:"/\\|?*]', '', title)
+        create_article_s3(title, BUCKET_NAME)
+        st.session_state.create_article = False
+
+# Display articles
+directory = episode
+articles = list_files_s3(BUCKET_NAME, directory + '/text')
+# st.write(articles)
+if articles:
+    article = st.selectbox("Select an Article", articles, format_func=lambda x: x.split('/')[-1].replace('.txt', ''))
+    article = article.split('/')[-1]
 
     # Text
-    if os.path.exists(f'podcast/{episode}/text/{article}'):
-        with open(f'podcast/{episode}/text/{article}', 'r', encoding='utf-8') as f:
-            text = f.read()
+    file_path = f'{episode}/text/{article}'
+    if file_path in articles:
+        text = read_file_s3(BUCKET_NAME, file_path)
         if st.toggle("Edit Article", key='edit'):
-            # st.sidebar.write(text)
-            # Read the text from the file
-            text = st.text_area('**Article**',text)
-            with open(f'podcast/{episode}/text/{article}', 'w', encoding='utf-8') as f:
-                f.write(text)
-            # st.sidebar.write(text)
+            text = st.text_area('**Article**', text)
+            write_file_s3(BUCKET_NAME, file_path, text)
         else:
-            st.markdown(f'**Article**')
+            st.write(f'**Article:**',article.replace('.txt', ''))
             st.write(text)
 
     # Summary
-    if not os.path.exists(f'podcast/{episode}/summary/{article}'):
+    summary_path = f'{episode}/summary/{article}'
+    summaries = list_files_s3(BUCKET_NAME, directory + '/summary')
+
+    if summary_path not in summaries:
         if st.button("Summary"):
-            if not os.path.exists(f'podcast/{episode}/summary'):
-                os.mkdir(f'podcast/{episode}/summary')
-            # Read the text from the file
-            with open(f'podcast/{episode}/text/{article}', 'r', encoding='utf-8') as f:
-                text = f.read()
             summary = summarize(text)
             st.write(f'Summary characters: {len(summary)}')
-            # summary = article.replace('.txt', '\n')+summary
-            # Write the summary string to the file
-            with open(f'podcast/{episode}/summary/{article}', 'w', encoding='utf-8') as f:
-                f.write(summary)
+            write_file_s3(BUCKET_NAME, summary_path, summary)
             st.write("Summary generated.")
             st.write(summary)
     else:
-        st.markdown(f'**Summary**')
-        with open(f'podcast/{episode}/summary/{article}', 'r', encoding='utf-8') as f:
-            summary = f.read()
+        st.write(f'**Summary**')
+        summary = read_file_s3(BUCKET_NAME, summary_path)
         st.write(summary)
 
-
         # Audio
-        if os.path.exists(f'podcast/{episode}/audio/' + article.replace('.txt', '.mp3')):
-            st.markdown(f'**Audio**')
-            with open(f'podcast/{episode}/audio/' + article.replace('.txt', '.mp3'), 'rb') as f:
-                audio = f.read()
-            st.audio(audio)
+        audio_path = f'{episode}/audio/' + article.replace('.txt', '.mp3')
+        audios = list_files_s3(BUCKET_NAME, directory + '/audio')
+        if audio_path in audios:
+            st.write(f'**Audio**')
+            audio_url = s3_client.generate_presigned_url('get_object',
+                                                        Params={'Bucket': BUCKET_NAME, 'Key': audio_path},
+                                                        ExpiresIn=3600)
+            st.audio(audio_url)
         else:
             voice = st.radio("Select Voice", voices)
             if st.button("TTS"):
-                if not os.path.exists(f'podcast/{episode}/audio'):
-                    os.mkdir(f'podcast/{episode}/audio')
-                # Read the text from the file
-                with open(f'podcast/{episode}/summary/{article}', 'r', encoding='utf-8') as f:
-                    summary = f.read()
-                summary = article.replace('.txt', '\n') + summary
-                tts(summary, article, episode, voice)
+                tts_s3(summary, article, episode, voice, BUCKET_NAME)
                 st.write("Audio generated.")
-                with open(f'podcast/{episode}/audio/' + article.replace('.txt', '.mp3'), 'rb') as f:
-                    audio = f.read()
-                st.audio(audio)
+                audio_url = s3_client.generate_presigned_url('get_object',
+                                                            Params={'Bucket': BUCKET_NAME, 'Key': audio_path},
+                                                            ExpiresIn=3600)
+                st.audio(audio_url)
 
 else:
     st.write("No articles found for the selected episode.")
-    if st.button("Create Episode"):
-        os.mkdir(directory)
-        os.mkdir(directory + '/text')
-        st.write("Episode directory created.")
