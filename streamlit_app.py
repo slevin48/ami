@@ -68,18 +68,19 @@ if os.path.exists(directory):
     article = st.selectbox("Select an Article", articles, index=article_index)
 
     # Text
-    with open(f'podcast/{episode}/text/{article}', 'r', encoding='utf-8') as f:
-        text = f.read()
-    if st.toggle("Edit Article", key='edit'):
-        # st.sidebar.write(text)
-        # Read the text from the file
-        text = st.text_area('**Article**',text)
-        with open(f'podcast/{episode}/text/{article}', 'w', encoding='utf-8') as f:
-            f.write(text)
-        # st.sidebar.write(text)
-    else:
-        st.markdown(f'**Article**')
-        st.write(text)
+    if os.path.exists(f'podcast/{episode}/text/{article}'):
+        with open(f'podcast/{episode}/text/{article}', 'r', encoding='utf-8') as f:
+            text = f.read()
+        if st.toggle("Edit Article", key='edit'):
+            # st.sidebar.write(text)
+            # Read the text from the file
+            text = st.text_area('**Article**',text)
+            with open(f'podcast/{episode}/text/{article}', 'w', encoding='utf-8') as f:
+                f.write(text)
+            # st.sidebar.write(text)
+        else:
+            st.markdown(f'**Article**')
+            st.write(text)
 
     # Summary
     if not os.path.exists(f'podcast/{episode}/summary/{article}'):
