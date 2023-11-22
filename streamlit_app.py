@@ -9,8 +9,15 @@ voices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
 # AWS S3 Bucket Name
 BUCKET_NAME = "ami48" 
 
-# AWS S3 Client Initialization
-s3_client = boto3.client('s3')
+# # AWS S3 Client Initialization
+# s3_client = boto3.client('s3')
+
+# Connect to S3 using st.secrets
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"]
+)
 
 # Initialize session state
 if "create_article" not in st.session_state:
