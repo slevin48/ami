@@ -71,7 +71,7 @@ if st.button("Create Article"):
         st.session_state.create_article = True
 if st.session_state.create_article:
     if title := st.text_input("Enter Article title", key='title'):
-        title = title.replace(':', '-')
+        title = title.replace(':', '-').replace('Les Echos - ', '')
         title = re.sub(r'[<>:"/\\|?*]', '', title)
         create_article_s3(title, BUCKET_NAME)
         st.session_state.create_article = False
