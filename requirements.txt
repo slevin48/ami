@@ -2,5 +2,6 @@ python-dotenv
 pydub
 openai
 elevenlabs
+boto3
 # moviepy
 # ipykernel
