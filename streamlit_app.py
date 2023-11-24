@@ -142,7 +142,10 @@ def edit(episode_number):
     # Get a list of all the audio files in the directory
     audio_files = list_files_s3(BUCKET_NAME, directory + '/audio')
     # audio_files = [file.split('/')[-1] for file in audio_files]
-
+    
+    # Download ami_generic.mp3 from S3 bucket
+    s3_client.download_file(BUCKET_NAME, 'ami_generic.mp3', 'ami_generic.mp3')
+    
     # Initialize an empty AudioSegment object to hold the concatenated audio
     concatenated_audio = AudioSegment.empty()
 
