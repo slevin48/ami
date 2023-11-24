@@ -126,7 +126,7 @@ if password == st.secrets['PASSWORD']:
             with st.sidebar.expander("Text to Speech"):
                 voice = st.radio("Select Voice", voices)
                 if st.button("TTS"):
-                    tts_s3(audio_path, episode, voice, BUCKET_NAME)
+                    tts_s3(summary, audio_path, voice, BUCKET_NAME)
                     # st.write("Audio generated.")
             
             audios = list_files_s3(BUCKET_NAME, directory + '/audio')
