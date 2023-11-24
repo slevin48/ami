@@ -43,8 +43,8 @@ def read_file_s3(bucket_name, file_path):
 def write_file_s3(bucket_name, file_path, data):
     s3_client.put_object(Bucket=bucket_name, Key=file_path, Body=data)
 
-def summarize(text):
-    inst = '''Resume en moins de 1000 caracteres:''' 
+def summarize(inst,text):
+    # inst = '''Resume en moins de 1000 caracteres:''' 
     completion = openai.chat.completions.create(
         model='gpt-3.5-turbo-1106',
         messages= [
@@ -53,15 +53,15 @@ def summarize(text):
     )
     return completion.choices[0].message.content
 
-def tts_s3(summary, article, episode, voice, bucket_name):
-    speech_file_path = f'{episode}/audio/' + article.replace('.txt', '.mp3')
+def tts_s3(summary, audio_path, voice, bucket_name):
+    # audio_path = f'{episode}/audio/' + article.replace('.txt', '.mp3')
     response = openai.audio.speech.create(
         model="tts-1",
         voice=voice,
         input=summary
     )
     audio_data = BytesIO(response.content)
-    s3_client.upload_fileobj(audio_data, bucket_name, speech_file_path)
+    s3_client.upload_fileobj(audio_data, bucket_name, audio_path)
 
 # Streamlit app
 st.sidebar.title("Conseil d'ami 🤖")
@@ -104,38 +104,39 @@ if password == st.secrets['PASSWORD']:
 
         # Summary
         summary_path = f'{episode}/summary/{article}'
+
+        with st.sidebar.expander("Summary"):
+            inst = st.text_area("Enter Instructions", value='Resume en moins de 4000 caracteres:')
+            if st.button("Summary"):
+                summary = summarize(inst,text)
+                # st.write(f'Summary characters: {len(summary)}')
+                write_file_s3(BUCKET_NAME, summary_path, summary)
+                # st.write("Summary generated.")
+        
         summaries = list_files_s3(BUCKET_NAME, directory + '/summary')
 
-        if summary_path not in summaries:
-            if st.button("Summary"):
-                summary = summarize(text)
-                st.write(f'Summary characters: {len(summary)}')
-                write_file_s3(BUCKET_NAME, summary_path, summary)
-                st.write("Summary generated.")
-                st.write(summary)
-        else:
+        if summary_path in summaries:
             st.write(f'**Summary**')
             summary = read_file_s3(BUCKET_NAME, summary_path)
             st.write(summary)
-
+            
             # Audio
-            audio_path = f'{episode}/audio/' + article.replace('.txt', '.mp3')
+            audio_path = f"{episode}/audio/{article.replace('.txt', '.mp3')}"
+
+            with st.sidebar.expander("Text to Speech"):
+                voice = st.radio("Select Voice", voices)
+                if st.button("TTS"):
+                    tts_s3(audio_path, episode, voice, BUCKET_NAME)
+                    # st.write("Audio generated.")
+            
             audios = list_files_s3(BUCKET_NAME, directory + '/audio')
+
             if audio_path in audios:
                 st.write(f'**Audio**')
                 audio_url = s3_client.generate_presigned_url('get_object',
                                                             Params={'Bucket': BUCKET_NAME, 'Key': audio_path},
                                                             ExpiresIn=3600)
                 st.audio(audio_url)
-            else:
-                voice = st.radio("Select Voice", voices)
-                if st.button("TTS"):
-                    tts_s3(summary, article, episode, voice, BUCKET_NAME)
-                    st.write("Audio generated.")
-                    audio_url = s3_client.generate_presigned_url('get_object',
-                                                                Params={'Bucket': BUCKET_NAME, 'Key': audio_path},
-                                                                ExpiresIn=3600)
-                    st.audio(audio_url)
 
     else:
         st.write("No articles found for the selected episode.")
