@@ -1,6 +1,9 @@
 import streamlit as st
 import openai, boto3, re
 from io import BytesIO
+from pydub import AudioSegment
+from elevenlabs import generate, save, voices, set_api_key
+import datetime
 
 st.set_page_config(page_title='AMI',
                    page_icon='🤖',
@@ -8,7 +11,10 @@ st.set_page_config(page_title='AMI',
 
 # Load environment variables
 openai.api_key = st.secrets["OPENAI_API_KEY"]
-voices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+openai_voices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
+set_api_key(st.secrets['ELEVENLABS_KEY'])
+voices_list = list(voices())
+# print(voices_list)
 
 # AWS S3 Bucket Name
 BUCKET_NAME = "ami48" 
@@ -40,6 +46,10 @@ def read_file_s3(bucket_name, file_path):
     response = s3_client.get_object(Bucket=bucket_name, Key=file_path)
     return response['Body'].read().decode('utf-8')
 
+def read_audio_s3(bucket_name, file_path):
+    response = s3_client.get_object(Bucket=bucket_name, Key=file_path)
+    return response['Body'].read()
+
 def write_file_s3(bucket_name, file_path, data):
     s3_client.put_object(Bucket=bucket_name, Key=file_path, Body=data)
 
@@ -62,6 +72,96 @@ def tts_s3(summary, audio_path, voice, bucket_name):
     )
     audio_data = BytesIO(response.content)
     s3_client.upload_fileobj(audio_data, bucket_name, audio_path)
+
+def intro(episode_number):
+    voice = 'frYann'
+    episode = 'episode' + '{:03d}'.format(episode_number)
+    intro = 'ami_{:03d}.txt'.format(episode_number)
+
+    # Define the template
+    template = '''Conseil d'ami
+    episode {}
+    '''
+    # Initialize an empty string to hold the formatted articles
+    intro_text = template.format(episode_number)
+    intro_text += '\n'
+
+    # Get the current date
+    current_date = datetime.datetime.now()
+
+    # Format the date as date & month
+    formatted_date = current_date.strftime("%d")
+    formatted_month = current_date.strftime("%B")
+    # Create a lookup table for English to French month names
+    month_lookup = {
+        "January": "janvier",
+        "February": "février",
+        "March": "mars",
+        "April": "avril",
+        "May": "mai",
+        "June": "juin",
+        "July": "juillet",
+        "August": "août",
+        "September": "septembre",
+        "October": "octobre",
+        "November": "novembre",
+        "December": "décembre"
+    }
+
+    # Print the formatted date
+    # print(formatted_date,month_lookup[formatted_month])
+    intro_text += f'{formatted_date} {month_lookup[formatted_month]}'
+    intro_text += '\n\n'
+    intro_text += 'Au programme de cet épisode:'
+    intro_text += '\n\n'
+
+    # Read the articles from the directory
+    articles = list_files_s3(BUCKET_NAME, directory + '/text')
+    articles = [article.split('/')[-1] for article in articles]
+    # Loop through the articles and format them
+    for article in articles:
+        intro_text += article.replace('txt','') + '\n\n'
+    # st.write(intro_text)
+    # Generate audio for the content
+    audio = generate(
+        text=intro_text,
+        voice=voice,
+        model="eleven_multilingual_v2"
+    )
+    # save(audio,f'podcast/{episode}/intro.mp3')
+    st.audio(audio)
+    audio_data = BytesIO(audio)
+    s3_client.upload_fileobj(audio_data, BUCKET_NAME, f'{episode}/intro.mp3')
+
+def edit(episode_number):
+    episode_number = int(episode_number)
+    episode = 'episode' + '{:03d}'.format(episode_number)
+    # Set the directory for the episode
+    directory = episode 
+
+    # Get a list of all the audio files in the directory
+    audio_files = list_files_s3(BUCKET_NAME, directory + '/audio')
+    # audio_files = [file.split('/')[-1] for file in audio_files]
+
+    # Initialize an empty AudioSegment object to hold the concatenated audio
+    concatenated_audio = AudioSegment.empty()
+
+    # Add the audio to the concatenated audio
+    concatenated_audio += AudioSegment.from_mp3('ami_generic.mp3')
+
+    # Add the intro audio to the concatenated audio
+    intro_audio = AudioSegment.from_mp3(BytesIO(read_audio_s3(BUCKET_NAME, f'{episode}/intro.mp3')))
+    concatenated_audio += intro_audio
+    # st.write(audio_files)
+    # Loop through the audio files and append them to the concatenated audio
+    for file in audio_files:
+        concatenated_audio += AudioSegment.from_mp3('ami_generic.mp3')
+        audio = AudioSegment.from_mp3(BytesIO(read_audio_s3(BUCKET_NAME, file)))
+        concatenated_audio += audio
+
+    # Export the concatenated audio to a file
+    concatenated_audio.export(f'ami_{episode}.mp3', format='mp3')
+    s3_client.upload_file(f'ami_{episode}.mp3', BUCKET_NAME, f'{episode}/ami_{episode}.mp3')
 
 # Streamlit app
 st.sidebar.title("Conseil d'ami 🤖")
@@ -124,7 +224,7 @@ if password == st.secrets['PASSWORD']:
             audio_path = f"{episode}/audio/{article.replace('.txt', '.mp3')}"
 
             with st.sidebar.expander("Text to Speech"):
-                voice = st.radio("Select Voice", voices)
+                voice = st.radio("Select Voice", openai_voices)
                 if st.button("TTS"):
                     tts_s3(summary, audio_path, voice, BUCKET_NAME)
                     # st.write("Audio generated.")
@@ -137,6 +237,22 @@ if password == st.secrets['PASSWORD']:
                                                             Params={'Bucket': BUCKET_NAME, 'Key': audio_path},
                                                             ExpiresIn=3600)
                 st.audio(audio_url)
+
+        # Generate intro
+        with st.sidebar.expander("Generate Episode"):
+            if st.button("Generate Intro"):
+                intro(episode_number)
+            intro_path = f"{episode}/intro.mp3"
+            if intro_path in list_files_s3(BUCKET_NAME, episode):
+                if st.button("Generate Episode"):
+                    edit(episode_number)
+                    st.write("Episode generated.")
+        if f'{episode}/ami_{episode}.mp3' in list_files_s3(BUCKET_NAME, episode):
+            st.sidebar.write(f'**Episode podcast**')
+            episode_url = s3_client.generate_presigned_url('get_object',
+                                                        Params={'Bucket': BUCKET_NAME, 'Key': f'{episode}/ami_{episode}.mp3'},
+                                                        ExpiresIn=3600)
+            st.sidebar.audio(episode_url)
 
     else:
         st.write("No articles found for the selected episode.")
