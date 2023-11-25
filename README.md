@@ -66,3 +66,7 @@ Translated title: I became president because of my brand, boasts Trump at his tr
 Voice: shimmer
 Audio file saved to podcast\episode003\audio_en\I became president because of my brand, boasts Trump at his trial..mp3
 ```
+
+## Inspiration
+
+https://github.com/slevin48/echos-TTS
