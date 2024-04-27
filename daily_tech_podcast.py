@@ -1,7 +1,7 @@
 import requests, datetime, openai
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
-import tomli, os
+# import tomli, os
 # with open(".streamlit/secrets.toml","rb") as f:
 #     secrets = tomli.load(f)
 # os.environ["OPENAI_API_KEY"] = secrets["OPENAI_API_KEY"]
