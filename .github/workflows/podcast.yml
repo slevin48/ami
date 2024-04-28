@@ -26,3 +26,5 @@ jobs:
         with:
           name: podcast
           path: podcast/tech001/podcast.mp3
+env:
+  OPENAI_API_KEY: ${{secrets.OPENAI_API_KEY}}
