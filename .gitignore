@@ -5,3 +5,4 @@ voice/
 # podcast/
 ami=app/
 .streamlit/
+__pycache__/

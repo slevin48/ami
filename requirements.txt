@@ -3,5 +3,9 @@ pydub
 openai
 elevenlabs
 boto3
+tomli
+requests
+bs4
+# streamlit
 # moviepy
 # ipykernel
