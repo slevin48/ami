@@ -1,9 +1,11 @@
 import streamlit as st
-import openai, boto3, re
+import openai, boto3, re, datetime
 from io import BytesIO
 from pydub import AudioSegment
-from elevenlabs import generate, save, voices, set_api_key
-import datetime
+from elevenlabs.client import ElevenLabs
+# from elevenlabs import save
+
+client11 = ElevenLabs(api_key=st.secrets['ELEVEN_API_KEY'])
 
 st.set_page_config(page_title='AMI',
                    page_icon='🤖',
@@ -12,8 +14,7 @@ st.set_page_config(page_title='AMI',
 # Load environment variables
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 openai_voices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer']
-set_api_key(st.secrets['ELEVENLABS_KEY'])
-voices_list = list(voices())
+voices_list = list(client11.voices.get_all())
 # print(voices_list)
 
 # AWS S3 Bucket Name
@@ -123,7 +124,7 @@ def intro(episode_number):
         intro_text += article.replace('txt','') + '\n\n'
     # st.write(intro_text)
     # Generate audio for the content
-    audio = generate(
+    audio = client11.generate(
         text=intro_text,
         voice=voice,
         model="eleven_multilingual_v2"
