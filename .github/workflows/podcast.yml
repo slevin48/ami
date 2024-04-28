@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Install dependencies
-        run: python -m pip install requests openai bs4
+        run: python -m pip install requests openai elevenlabs bs4 pydub
       - name: Install ffmpeg
         run: |
           sudo apt-get update
