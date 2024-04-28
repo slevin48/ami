@@ -1,9 +1,9 @@
 import requests, datetime, openai, os, re
 import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
-from elevenlabs.client import ElevenLabs
-from elevenlabs import save
 from pydub import AudioSegment
+# from elevenlabs.client import ElevenLabs
+# from elevenlabs import save
 
 # import tomli
 # with open(".streamlit/secrets.toml","rb") as f:
