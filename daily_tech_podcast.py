@@ -105,14 +105,11 @@ if __name__ == "__main__":
   # Print the channel last build date
   print(f"Last Build Date: {channel.find('lastBuildDate').text}")
 
-  item = channel.find('item')
-
-  # scrape the article
-  (title,link,text) = scrape_article(item,episode)
-
-  # TTS
-  speech_file_path = f"podcast/{episode}/audio/{title}.mp3"
-  # openai_tts(text,speech_file_path)
-  # elevenlabs_tts(text,speech_file_path)
-  split_tts(text,speech_file_path)
-  print(f"New episode: {speech_file_path}")
+  items = channel.findall('item')
+  for item in items[0:5]:
+    # scrape the article
+    (title,link,text) = scrape_article(item,episode)
+    # TTS
+    speech_file_path = f"podcast/{episode}/audio/{title}.mp3"
+    split_tts(text,speech_file_path)
+    print(f"New episode: {speech_file_path}")
